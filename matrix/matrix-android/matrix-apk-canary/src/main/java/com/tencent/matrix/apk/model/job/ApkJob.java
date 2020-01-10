@@ -254,6 +254,10 @@ public final class ApkJob {
                 }
             }
 
+            if (config.has(JobConstants.PARAM_LOG_LEVEL)) {
+                Log.setLogLevel(config.get(JobConstants.PARAM_LOG_LEVEL).getAsString());
+            }
+
             if (config.has(JobConstants.PARAM_MAPPING_TXT) && !Util.isNullOrNil(config.get(JobConstants.PARAM_MAPPING_TXT).getAsString())) {
                 jobConfig.setMappingFilePath(config.get(JobConstants.PARAM_MAPPING_TXT).getAsString());
             }
@@ -418,6 +422,10 @@ public final class ApkJob {
                     jobConfig.setOutputConfig((JsonArray) jsonElement);
                 }
 
+                if (globalParams.containsKey(JobConstants.PARAM_LOG_LEVEL)) {
+                    Log.setLogLevel(globalParams.get(JobConstants.PARAM_LOG_LEVEL));
+                }
+
             }
 
             //register MMTaskResult
@@ -464,7 +472,12 @@ public final class ApkJob {
             ApkTask unzipTask = TaskFactory.factory(TaskFactory.TASK_TYPE_UNZIP, jobConfig, new HashMap<String, String>());
             preTasks.add(unzipTask);
             for (String format : jobConfig.getOutputFormatList()) {
-                jobResults.add(JobResultFactory.factory(format, jobConfig));
+                JobResult result = JobResultFactory.factory(format, jobConfig);
+                if (result != null) {
+                    jobResults.add(result);
+                } else {
+                    Log.w(TAG, "Unknown output format name '%s' !", format);
+                }
             }
             execute();
         } else {
@@ -504,7 +517,7 @@ public final class ApkJob {
                     }
                 }
             }
-            executor.shutdown();
+            executor.shutdownNow();
 
             for (JobResult jobResult : jobResults) {
                 jobResult.output();

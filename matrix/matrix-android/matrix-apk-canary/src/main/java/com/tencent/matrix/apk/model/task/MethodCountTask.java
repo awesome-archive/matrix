@@ -84,7 +84,7 @@ public class MethodCountTask extends ApkTask {
         if (Util.isNullOrNil(inputPath)) {
             throw new TaskInitException(TAG + "---APK-UNZIP-PATH can not be null!");
         }
-        Log.d(TAG, "input path:%s", inputPath);
+        Log.i(TAG, "input path:%s", inputPath);
         inputFile = new File(inputPath);
         if (!inputFile.exists()) {
             throw new TaskInitException(TAG + "---APK-UNZIP-PATH '" + inputPath + "' is not exist!");
@@ -204,6 +204,7 @@ public class MethodCountTask extends ApkTask {
             for (int i = 0; i < dexFileList.size(); i++) {
                 RandomAccessFile dexFile = dexFileList.get(i);
                 countDex(dexFile);
+                dexFile.close();
                 int totalInternalMethods = sumOfValue(classInternalMethod);
                 int totalExternalMethods = sumOfValue(classExternalMethod);
                 JsonObject jsonObject = new JsonObject();

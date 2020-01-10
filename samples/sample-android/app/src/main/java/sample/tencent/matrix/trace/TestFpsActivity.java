@@ -35,6 +35,7 @@ import com.tencent.matrix.trace.listeners.IDoFrameListener;
 import com.tencent.matrix.util.MatrixLog;
 
 import java.util.Random;
+import java.util.concurrent.Executor;
 
 import sample.tencent.matrix.R;
 import sample.tencent.matrix.issue.IssueFilter;
@@ -54,18 +55,19 @@ public class TestFpsActivity extends Activity {
 
     private int count;
     private long time = System.currentTimeMillis();
-    private IDoFrameListener mDoFrameListener = new IDoFrameListener(new Handler(sHandlerThread.getLooper())) {
-        @Override
-        public void doFrameAsync(long lastFrameNanos, long frameNanos, String scene, int droppedFrames) {
-            super.doFrameAsync(lastFrameNanos, frameNanos, scene, droppedFrames);
-//            Log.i(TAG, "[doFrameAsync] scene:" + scene + " droppedFrames:" + droppedFrames + " Thread:" + Thread.currentThread().getName());
-        }
+    private IDoFrameListener mDoFrameListener = new IDoFrameListener(new Executor() {
+        Handler handler = new Handler(sHandlerThread.getLooper());
 
         @Override
-        public void doFrameSync(long lastFrameNanos, long frameNanos, String scene, int droppedFrames) {
-            super.doFrameSync(lastFrameNanos, frameNanos, scene, droppedFrames);
+        public void execute(Runnable command) {
+            handler.post(command);
+        }
+    }) {
+        @Override
+        public void doFrameAsync(String visibleScene, long taskCost, long frameCostMs, int droppedFrames, boolean isContainsFrame) {
+            super.doFrameAsync(visibleScene, taskCost, frameCostMs, droppedFrames, isContainsFrame);
             count += droppedFrames;
-            MatrixLog.i(TAG, "[doFrameSync] scene:" + scene + " droppedFrames:" + droppedFrames);
+            MatrixLog.i(TAG, "[doFrameSync] scene:" + visibleScene + " droppedFrames:" + droppedFrames);
         }
     };
 
@@ -76,10 +78,10 @@ public class TestFpsActivity extends Activity {
         setContentView(R.layout.test_fps_layout);
 
         IssueFilter.setCurrentFilter(IssueFilter.ISSUE_TRACE);
-        if(!Matrix.with().getPluginByClass(TracePlugin.class).getFPSTracer().isCreated()) {
-            Matrix.with().getPluginByClass(TracePlugin.class).getFPSTracer().onCreate();
-        }
-        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().register(mDoFrameListener);
+
+        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().onStartTrace();
+        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().addListener(mDoFrameListener);
+
         time = System.currentTimeMillis();
         mListView = (ListView) findViewById(R.id.list_view);
         String[] data = new String[200];
@@ -110,7 +112,7 @@ public class TestFpsActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         MatrixLog.i(TAG, "[onDestroy] count:" + count + " time:" + (System.currentTimeMillis() - time) + "");
-        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().unregister(mDoFrameListener);
-        Matrix.with().getPluginByClass(TracePlugin.class).getFPSTracer().onDestroy();
+        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().removeListener(mDoFrameListener);
+        Matrix.with().getPluginByClass(TracePlugin.class).getFrameTracer().onCloseTrace();
     }
 }

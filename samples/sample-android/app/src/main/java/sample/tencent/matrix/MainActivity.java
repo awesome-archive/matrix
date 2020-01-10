@@ -18,7 +18,11 @@ package sample.tencent.matrix;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -79,6 +83,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        for (int i = 0; i < 20; i++) {
+            HandlerThread handlerThread = new HandlerThread(TAG + i);
+            handlerThread.start();
+            new Handler(handlerThread.getLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.i(TAG, "run");
+//                    SystemClock.sleep(10000000);
+                }
+            });
+        }
+
     }
+
 
 }

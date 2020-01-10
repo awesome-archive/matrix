@@ -1,15 +1,17 @@
 buildscript {
     repositories {
+
         mavenLocal()
         google()
         jcenter()
+
     }
 
     dependencies {
         // classpath
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:3.2.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'digital.wup:android-maven-publish:3.2.0'
+        classpath 'digital.wup:android-maven-publish:3.6.2'
     }
 
 
@@ -20,6 +22,7 @@ buildscript {
 
 allprojects {
     repositories {
+
         mavenLocal()
         google()
         jcenter()
@@ -36,13 +39,14 @@ ext {
     // For android sub-projects
     minSdkVersion = 19
     targetSdkVersion = 23
-    compileSdkVersion = 26
-    buildToolsVersion = '27.0.3'
+    compileSdkVersion = 28
+    buildToolsVersion = '28.0.3'
 
     javaVersion = JavaVersion.VERSION_1_7
 
     GROUP = 'com.tencent.matrix'
     VERSION_NAME = "${VERSION_NAME_PREFIX}${VERSION_NAME_SUFFIX}"
+    PUBLISH_CHANNEL = "${PUBLISH_CHANNEL}"
 
     POM_PACKAGING = "pom"
     POM_DESCRIPTION = "matrix"
@@ -83,4 +87,3 @@ task generateVersionTxt() {
         file.write(rootProject.ext.VERSION_NAME)
     }
 }
-

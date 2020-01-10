@@ -30,7 +30,6 @@ import com.tencent.matrix.resource.analyzer.model.HeapDump;
 import com.tencent.matrix.util.MatrixLog;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -68,7 +67,13 @@ public class AndroidHeapDumper {
             return null;
         }
 
-        if (!hprofFile.getParentFile().canWrite()) {
+        final File hprofDir = hprofFile.getParentFile();
+        if (hprofDir == null) {
+            MatrixLog.w(TAG, "hprof file path: %s does not indicate a full path.", hprofFile.getAbsolutePath());
+            return null;
+        }
+
+        if (!hprofDir.canWrite()) {
             MatrixLog.w(TAG, "hprof file path: %s cannot be written.", hprofFile.getAbsolutePath());
             return null;
         }
@@ -85,7 +90,7 @@ public class AndroidHeapDumper {
             Debug.dumpHprofData(hprofFile.getAbsolutePath());
             cancelToast(waitingForToast.get());
             return hprofFile;
-        } catch (IOException e) {
+        } catch (Exception e) {
             MatrixLog.printErrStackTrace(TAG, e, "failed to dump heap into file: %s.", hprofFile.getAbsolutePath());
             return null;
         }

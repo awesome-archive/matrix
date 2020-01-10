@@ -36,9 +36,7 @@ import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +54,6 @@ public class UnusedAssetsTask extends ApkTask {
 
     private File inputFile;
     private final List<String> dexFileNameList;
-    private final List<RandomAccessFile> dexFileList;
     private final Set<String> ignoreSet;
     private final Set<String> assetsPathSet;
     private final Set<String> assetRefSet;
@@ -66,7 +63,6 @@ public class UnusedAssetsTask extends ApkTask {
         type = TaskFactory.TASK_TYPE_UNUSED_ASSETS;
         dexFileNameList = new ArrayList<>();
         ignoreSet = new HashSet<>();
-        dexFileList = new ArrayList<>();
         assetsPathSet = new HashSet<>();
         assetRefSet = new HashSet<>();
     }
@@ -87,25 +83,19 @@ public class UnusedAssetsTask extends ApkTask {
         }
         if (params.containsKey(JobConstants.PARAM_IGNORE_ASSETS_LIST) && !Util.isNullOrNil(params.get(JobConstants.PARAM_IGNORE_ASSETS_LIST))) {
             String[] ignoreAssets = params.get(JobConstants.PARAM_IGNORE_ASSETS_LIST).split(",");
-            Log.d(TAG, "ignore assets %d", ignoreAssets.length);
+            Log.i(TAG, "ignore assets %d", ignoreAssets.length);
             for (String ignore : ignoreAssets) {
                 ignoreSet.add(Util.globToRegexp(ignore));
             }
         }
 
         File[] files = inputFile.listFiles();
-        try {
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile() && file.getName().endsWith(ApkConstants.DEX_FILE_SUFFIX)) {
-                        dexFileNameList.add(file.getName());
-                        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                        dexFileList.add(randomAccessFile);
-                    }
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile() && file.getName().endsWith(ApkConstants.DEX_FILE_SUFFIX)) {
+                    dexFileNameList.add(file.getName());
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new TaskInitException(e.getMessage(), e);
         }
     }
 
@@ -116,7 +106,7 @@ public class UnusedAssetsTask extends ApkTask {
                 if (file.isDirectory()) {
                     findAssetsFile(file);
                 } else {
-                    //Log.d(TAG, "find asset file %s", file.getAbsolutePath());
+                    Log.d(TAG, "find asset file %s", file.getAbsolutePath());
                     assetsPathSet.add(file.getAbsolutePath());
                 }
             }
@@ -153,7 +143,7 @@ public class UnusedAssetsTask extends ApkTask {
                     assetFileName = assetFileName.substring(1, assetFileName.length() - 1);
                     if (!Util.isNullOrNil(assetFileName)) {
                         for (String path : assetsPathSet) {
-                            if (path.endsWith(assetFileName)) {
+                            if (assetFileName.endsWith(path)) {
                                 assetRefSet.add(path);
                             }
                         }
@@ -165,7 +155,7 @@ public class UnusedAssetsTask extends ApkTask {
 
     private boolean ignoreAsset(String name) {
         for (String pattern : ignoreSet) {
-            //Log.d(TAG, "pattern %s", pattern);
+            Log.d(TAG, "pattern %s", pattern);
             if (name.matches(pattern)) {
                 return true;
             }
@@ -179,7 +169,7 @@ public class UnusedAssetsTask extends ApkTask {
             int index = path.indexOf(rootPath);
             if (index >= 0) {
                 String relativePath = path.substring(index + rootPath.length() + 1);
-                //Log.d(TAG, "assets %s", relativePath);
+                Log.d(TAG, "assets %s", relativePath);
                 relativeAssetsSet.add(relativePath);
                 if (ignoreAsset(relativePath)) {
                     Log.d(TAG, "ignore assets %s", relativePath);
@@ -200,9 +190,9 @@ public class UnusedAssetsTask extends ApkTask {
             File assetDir = new File(inputFile, ApkConstants.ASSETS_DIR_NAME);
             findAssetsFile(assetDir);
             generateAssetsSet(assetDir.getAbsolutePath());
-            Log.d(TAG, "find all assets count: %d", assetsPathSet.size());
+            Log.i(TAG, "find all assets count: %d", assetsPathSet.size());
             decodeCode();
-            Log.d(TAG, "find reference assets count: %d", assetRefSet.size());
+            Log.i(TAG, "find reference assets count: %d", assetRefSet.size());
             assetsPathSet.removeAll(assetRefSet);
             JsonArray jsonArray = new JsonArray();
             for (String name : assetsPathSet) {

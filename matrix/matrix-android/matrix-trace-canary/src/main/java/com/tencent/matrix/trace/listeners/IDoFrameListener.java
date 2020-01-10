@@ -16,44 +16,36 @@
 
 package com.tencent.matrix.trace.listeners;
 
-import android.os.Handler;
+import java.util.concurrent.Executor;
 
 /**
  * Created by caichongyang on 2017/5/26.
- *
  **/
 public class IDoFrameListener {
-    private Handler mHandler;
+
+    private Executor executor;
+    public long time;
 
     public IDoFrameListener() {
 
     }
 
-    public IDoFrameListener(Handler handler) {
-        this.mHandler = handler;
+    public IDoFrameListener(Executor executor) {
+        this.executor = executor;
     }
 
-    /**
-     * ASync exec
-     *
-     * @param scene         current scene
-     * @param droppedFrames dropped the count of Frame between last frame and current frame
-     */
-    public void doFrameAsync(long lastFrameNanos, long frameNanos, String scene, int droppedFrames) {
+
+    public void doFrameAsync(String visibleScene, long taskCost, long frameCostMs, int droppedFrames, boolean isContainsFrame) {
 
     }
 
-    /**
-     * Sync exec
-     *
-     * @param scene         current scene
-     * @param droppedFrames dropped the count of Frame between last frame and current frame
-     */
-    public void doFrameSync(long lastFrameNanos, long frameNanos, String scene, int droppedFrames) {
+    public void doFrameSync(String visibleScene, long taskCost, long frameCostMs, int droppedFrames, boolean isContainsFrame) {
 
     }
 
-    public Handler getHandler() {
-        return mHandler;
+    public Executor getExecutor() {
+        return executor;
     }
+
+
 }
